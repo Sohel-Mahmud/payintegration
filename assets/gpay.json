@@ -10,8 +10,9 @@
         "tokenizationSpecification": {
           "type": "PAYMENT_GATEWAY",
           "parameters": {
-            "gateway": "example",
-            "gatewayMerchantId": "gatewayMerchantId"
+            "gateway": "stripe",
+            "stripe:version": "2018-10-31",
+            "gatewayMerchantId": "pk_test_BPZRRegJm0Y8KuX7nBElSfpq00hLnSTszJ"
           }
         },
         "parameters": {

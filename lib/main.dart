@@ -36,11 +36,6 @@ class PayMaterialApp extends StatelessWidget {
         GlobalMaterialLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,
       ],
-      supportedLocales: [
-        const Locale('en', ''),
-        const Locale('es', ''),
-        const Locale('de', ''),
-      ],
       home: PaySampleApp(),
     );
   }
@@ -60,6 +55,17 @@ class _PaySampleAppState extends State<PaySampleApp> {
 
   void onApplePayResult(paymentResult) {
     debugPrint(paymentResult.toString());
+  }
+
+  Pay _payClient = Pay.withAssets(['gpay.json', 'applepay.json']);
+
+  void onGooglePayPressed() async {
+    final result = await _payClient.showPaymentSelector(
+      provider: PayProvider.google_pay,
+      paymentItems: _paymentItems,
+    );
+    print(result);
+    // Send the resulting Google Pay token to your server / PSP
   }
 
   @override
@@ -106,28 +112,57 @@ class _PaySampleAppState extends State<PaySampleApp> {
             ),
           ),
           GooglePayButton(
+            width: 200,
+            height: 50,
             paymentConfigurationAsset: 'gpay.json',
             paymentItems: _paymentItems,
             style: GooglePayButtonStyle.black,
             type: GooglePayButtonType.pay,
             margin: const EdgeInsets.only(top: 15.0),
-            onPaymentResult: onGooglePayResult,
+            onPaymentResult: (onGooglePayResult) {
+              print(onGooglePayResult);
+            },
             loadingIndicator: const Center(
               child: CircularProgressIndicator(),
             ),
           ),
-          /* ApplePayButton(
-            paymentConfigurationAsset: 'default_payment_profile_apple_pay.json',
+          ApplePayButton(
+            paymentConfigurationAsset: 'applepay.json',
             paymentItems: _paymentItems,
             style: ApplePayButtonStyle.black,
             type: ApplePayButtonType.buy,
             margin: const EdgeInsets.only(top: 15.0),
-            onPaymentResult: onApplePayResult,
+            onPaymentResult: (onApplePayResult) {
+              print(onApplePayResult);
+            },
             loadingIndicator: const Center(
               child: CircularProgressIndicator(),
             ),
-          ), */
-          const SizedBox(height: 15)
+          ),
+          const SizedBox(height: 15),
+          FutureBuilder(
+            future: _payClient.userCanPay(PayProvider.google_pay),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.done) {
+                if (snapshot.data == true) {
+                  return RawGooglePayButton(
+                      style: GooglePayButtonStyle.black,
+                      type: GooglePayButtonType.pay,
+                      onPressed: onGooglePayPressed);
+                } else {
+                  // userCanPay returned false
+                  // Consider showing an alternative payment method
+                  return Container(
+                    child: Text("Use other payment method"),
+                  );
+                }
+              } else {
+                return Container(
+                  child: Text("lost connection"),
+                );
+              }
+            },
+          ),
         ],
       ),
     );
